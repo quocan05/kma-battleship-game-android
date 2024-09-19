@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#3C3C3C"
+    android:background="@drawable/backgroundplaceship"
     tools:context="edu.utep.cs4330.battleship.PlaceShipsActivity">
 
     <Button
@@ -18,7 +18,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignRight="@+id/placeShipsBoardView"
         android:layout_marginTop="22dp"
-        android:background="@android:color/holo_green_dark"
+        android:background="@drawable/army_button_background"
         android:elevation="6dp"
         android:onClick="segueToPlayActivity"
         android:paddingBottom="5dp"
@@ -41,7 +41,7 @@
         android:layout_alignStart="@+id/placeButton"
         android:layout_below="@+id/placeButton"
         android:layout_marginTop="16dp"
-        android:background="@android:color/holo_green_dark"
+        android:background="@drawable/army_button_background"
         android:onClick="rotateButtonTapped"
         android:paddingBottom="5dp"
         android:paddingEnd="5dp"
@@ -54,11 +54,14 @@
 
     <edu.utep.cs4330.battleship.BoardView
         android:id="@+id/placeShipsBoardView"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
+        android:layout_width="382dp"
+        android:layout_height="382dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="30dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="17dp"
+        android:layout_marginBottom="34dp"
         android:layout_weight="0.7" />
 
     <ImageView
