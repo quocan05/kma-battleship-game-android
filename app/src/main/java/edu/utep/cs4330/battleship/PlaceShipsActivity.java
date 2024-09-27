@@ -18,12 +18,22 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import static java.lang.Thread.sleep;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
+import edu.utep.cs4330.battleship.common.Common;
+import edu.utep.cs4330.battleship.dto.response.MqttResponse;
+import edu.utep.cs4330.battleship.service.MqttHandler;
 
 /**
  * Created by Gerardo Cervantes modified by Eric Torres.
@@ -66,9 +76,12 @@ public class PlaceShipsActivity extends AppCompatActivity {
     private boolean donePlacingShips = false;
 
     private Thread readMessages;
+    private MqttHandler mqttHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        mqttHandler = MqttHandler.getInstance();
+
         super.onCreate(savedInstanceState);
 
         RelativeLayout layout = (RelativeLayout) getLayoutInflater().inflate(R.layout.content_place_ships, null);
@@ -208,39 +221,52 @@ public class PlaceShipsActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 while (true) {
-                    String msg = NetworkAdapter.readMessage();
-                    Log.d("wifiMe", "Message received IN PLACE SHIP ACTIVITY: " + msg);
+                    mqttHandler.getClient().setCallback(new MqttCallback() {
+                        @Override
+                        public void connectionLost(Throwable cause) {
 
-                    if (msg == null) {
-                        //Connection lost handler
-                        Log.d("wifiMe", "Connection Lost!");
-                        toast("Connection Lost! Now playing single player game against computer");
-                        Log.d("wifiMe", "Has connection? " + NetworkAdapter.hasConnection());
-                        return;
-                    }
-                    else if(msg.contains(NetworkAdapter.STOP_READING)){
-                        return;
-                    }
-                    else if (msg.startsWith(NetworkAdapter.PLACED_SHIPS)) {
-                        Log.d("wifiMe", "Found board message");
-
-
-                        //Gets board
-                        opponentBoard = NetworkAdapter.decipherPlaceShips(msg);
-                        Log.d("wifiMe", "Decipher done"); //Why does it sometimes not reach this message, if donePlacingShips is true?
-                        //If you are already done placing ships, and you have received your opponent's board, then startActivity
-                        if (donePlacingShips) {
-                            //readMessages.interrupt();
-                            NetworkAdapter.writeStopReadingMessage();
-
-                            GameManager game = new GameManager(playerBoard, opponentBoard, true);
-                            segueToActivity(game);
-
-                            //return;
                         }
-                    }
 
+                        @Override
+                        public void messageArrived(String topic, MqttMessage message) throws Exception {
+                            MqttResponse mqttResponse = Common.convertStringJsonToMqttObject(new String(message.getPayload()));
+                            String msg = NetworkAdapter.readMessage();
+                            Log.d("wifiMe", "Message received IN PLACE SHIP ACTIVITY: " + msg);
 
+                            if (mqttResponse == null) {
+                                //Connection lost handler
+                                Log.d("wifiMe", "Connection Lost!");
+                                toast("Connection Lost! Now playing single player game against computer");
+                                Log.d("wifiMe", "Has connection? " + NetworkAdapter.hasConnection());
+                                return;
+                            }
+                            else if(Objects.equals(mqttResponse.getMessage(),NetworkAdapter.STOP_READING)){
+                                return;
+                            }
+                            else if (Objects.equals(mqttResponse.getMessage(),NetworkAdapter.PLACED_SHIPS)) {
+                                Log.d("wifiMe", "Found board message");
+                                Board  board = Common.convertMapToObject((LinkedHashMap<String, Object>) mqttResponse.getData(),Board.class);
+                                //Gets board
+                                opponentBoard = board;
+                                Log.d("wifiMe", "Decipher done"); //Why does it sometimes not reach this message, if donePlacingShips is true?
+                                //If you are already done placing ships, and you have received your opponent's board, then startActivity
+                                if (donePlacingShips) {
+                                    //readMessages.interrupt();
+                                    NetworkAdapter.writeStopReadingMessage();
+
+                                    GameManager game = new GameManager(playerBoard, opponentBoard, true);
+                                    segueToActivity(game);
+
+                                    //return;
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void deliveryComplete(IMqttDeliveryToken token) {
+
+                        }
+                    });
                 }
             }
         });
