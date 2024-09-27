@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -480,9 +481,9 @@ public class PlaceShipsActivity extends AppCompatActivity {
         if (enable) {
             placeButton.setEnabled(true);
             placeButton.setTextColor(Color.WHITE);
-            placeButton.setBackgroundColor(Color.rgb(102, 153, 0));
+            placeButton.setBackgroundResource(R.drawable.army_button_background);
         } else {
-            placeButton.setBackgroundColor(Color.rgb(75, 120, 30));
+            placeButton.setBackgroundResource(R.drawable.army_button_background);
             placeButton.setTextColor(Color.rgb(115, 115, 115));
             placeButton.setEnabled(false);
         }

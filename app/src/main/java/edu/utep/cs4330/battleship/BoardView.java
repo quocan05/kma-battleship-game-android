@@ -42,7 +42,7 @@ public class BoardView extends View {
         boardPaint.setColor(Color.BLUE); // default board background color
         boardLinePaint.setColor(Color.WHITE); // grid lines color
         boardLinePaint.setStrokeWidth(2);
-        borderPaint.setColor(Color.GREEN); // green border color
+        borderPaint.setColor(Color.WHITE); // green border color
         borderPaint.setStrokeWidth(10); // border width
         borderPaint.setStyle(Paint.Style.STROKE); // only draw the border outline
     }
@@ -119,7 +119,7 @@ public class BoardView extends View {
     private void drawSquare(Canvas canvas, int color, int x, int y) {
         boardPaint.setColor(color);
         float tileSize = maxCoord() / 10;
-        float offset = 8;
+        float offset = 12;
         canvas.drawRect((tileSize * x) + offset, (tileSize * y) + offset,
                 ((tileSize * x) + tileSize) - offset, ((tileSize * y) + tileSize) - offset, boardPaint);
     }

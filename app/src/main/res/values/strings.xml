@@ -26,6 +26,9 @@
     <string name="win_status">You have won the game! </string>
     <string name="lose_status">You have lost the game! </string>
     <string name="title_activity_connection">ConnectionActivity</string>
+    <string name="title_activity_signup">Signup</string>
+    <string name="title_activity_login">Login</string>
+
 
 
 </resources>
