@@ -1,57 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launchercustom"
         android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@style/AppTheme"
         android:networkSecurityConfig="@xml/network_security_config"
-        >
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
 
-        <activity android:name=".MainActivity"/>
+        <activity android:name=".MainActivity" />
 
         <activity
             android:name=".PlaceShipsActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"/>
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
             android:name=".ConnectionActivity"
             android:label="@string/title_activity_connection"
-            android:theme="@style/AppTheme.NoActionBar"/>
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
             android:name=".SignUp"
             android:label="@string/title_activity_signup"
-            android:theme="@style/AppTheme.NoActionBar"/>
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
             android:name=".MainMenu"
-            android:theme="@style/AppTheme.NoActionBar"/>
+            android:theme="@style/AppTheme.NoActionBar" />
 
+        <service
+            android:name=".service.MusicService"
+            android:enabled="true"
+            android:exported="false" />
         <!-- Modified MainMenu activity with android:exported attribute -->
         <activity
             android:name=".Login"
-            android:screenOrientation="portrait"
-            android:exported="true"> <!-- Set to true because it has a launcher intent filter -->
+            android:exported="true"
+            android:screenOrientation="portrait"> <!-- Set to true because it has a launcher intent filter -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name="org.eclipse.paho.android.service.MqttService">
-        </service>
+        <service android:name="org.eclipse.paho.android.service.MqttService"></service>
     </application>
 
 </manifest>

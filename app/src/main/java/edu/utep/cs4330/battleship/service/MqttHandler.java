@@ -1,6 +1,8 @@
 package edu.utep.cs4330.battleship.service;
 import android.util.Log;
 
+import androidx.lifecycle.ViewModelProvider;
+
 import com.google.gson.Gson;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -12,7 +14,8 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 
-public class MqttHandler {
+
+public class MqttHandler  {
     private static MqttHandler instance;
     private MqttClient client;
     private static final String username = "hoang";
@@ -100,4 +103,5 @@ public class MqttHandler {
     public MqttClient getClient() {
         return client;
     }
+
 }

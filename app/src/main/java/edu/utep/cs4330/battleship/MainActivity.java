@@ -28,7 +28,8 @@ import java.util.LinkedHashMap;
 import java.util.Objects;
 
 import edu.utep.cs4330.battleship.common.Common;
-import edu.utep.cs4330.battleship.dto.response.MqttResponse;
+import edu.utep.cs4330.battleship.dto.UserSingleton;
+import edu.utep.cs4330.battleship.dto.response.MqttObject;
 import edu.utep.cs4330.battleship.dto.object.Position;
 import edu.utep.cs4330.battleship.service.MqttHandler;
 
@@ -80,13 +81,14 @@ public class MainActivity extends AppCompatActivity {
     private String MQTT_TAG = "MQTT";
     private boolean soundEnabled = true;
     private MqttHandler mqttHandler;
+    private UserSingleton userSingleton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        mqttHandler = MqttHandler.getInstance();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mqttHandler = MqttHandler.getInstance();
 
 
         Intent intent = getIntent();
@@ -117,7 +119,6 @@ public class MainActivity extends AppCompatActivity {
         //Gives board references to the BoardViews
         setNewBoards(playerBoardView, opponentBoardView, game.getPlayer().getBoard(), game.getOpponentPlayer().getBoard());
         updateTurnDisplay();
-        this.mqttHandler.subscribe("hoang/dz");
         startReadingNetworkMessages();
 
         if (NetworkAdapter.hasConnection()) {
@@ -170,69 +171,9 @@ public class MainActivity extends AppCompatActivity {
      * Starts a new thread that will start reading for message and handle them
      */
     void startReadingNetworkMessages() {
-
         Thread readMessages = new Thread(new Runnable() {
             public void run() {
-
                 while (true) {
-
-//                    String msg = NetworkAdapter.readMessage();
-//                    Log.d("wifiMe", "Message received: " + msg);
-//                    Log.d("wifiMe", msg);
-//                    if (msg == null) {
-//                        //Connection lost handler
-//                        Log.d("wifiMe", "Connection Lost!, in");
-//                        toast("Connection Lost! Now playing single player game against computer");
-//                        //allow user to change AI difficulty again
-//                        opponentSelect.setEnabled(true);
-//                        return;
-//                    } else if (msg.startsWith(NetworkAdapter.PLACED_SHIPS)) {
-//                        Log.d("wifiMe", "Received place ships message?? Shouldn't have found one, debug");
-//                    } else if (msg.startsWith(NetworkAdapter.NEW_GAME)) {
-//                        Log.d("wifiMe", "New game requested, dialog given with yes or no options to accept or reject request"); //should send accept message message and reset game
-//                        resetPromptDialog(getString(R.string.reset_game_connected_prompt), new DialogInterface.OnClickListener() {
-//                            public void onClick(DialogInterface dialog, int which) {
-//
-//                                if (NetworkAdapter.hasConnection()) {
-//                                    NetworkAdapter.writeAcceptNewGameMessage();
-//                                    NetworkAdapter.writeStopReadingMessage();
-//                                }
-//                                segueToPlaceShipsActivity();
-//                            }
-//                        }, new DialogInterface.OnClickListener() {
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                new Thread(new Runnable() {
-//                                    @Override
-//                                    public void run() {
-//                                        NetworkAdapter.writeRejectNewGameMessage();
-//                                    }
-//                                }).start();
-//
-//                            }
-//                        });
-//                    } else if (msg.startsWith(NetworkAdapter.REJECT_NEW_GAME_REQUEST)) {
-//                        toast("New game request rejected  by other player");
-//                    } else if (msg.startsWith(NetworkAdapter.ACCEPT_NEW_GAME_REQUEST)) {
-//                        Log.d("wifiMe", "Accepted new game request");  //should send accept message message
-//
-//                        if (NetworkAdapter.hasConnection()) {
-//                            NetworkAdapter.writeStopReadingMessage();
-//                        }
-//                        segueToPlaceShipsActivity();
-//                    } else if (msg.contains(NetworkAdapter.STOP_READING)) { //TODO remove if everything is broken
-//                        Log.d("wifiMe", "STOPPED READING MESSAGE IN MAINACTIVITY CLASS");
-//                        return;
-//                    } else if (msg.contains(NetworkAdapter.PLACE_SHOT)) {
-//                        Log.d("wifiMe", "Place was shot message received, message: " + msg);
-//                        int[] placeShot = NetworkAdapter.decipherPlaceShot(msg);
-//                        if (placeShot == null) {
-//                            Log.d("wifiMe", "Found no coordinates");
-//                            return;
-//                        }
-//                        Log.d("wifiMe", "Placed shot on: " + placeShot[0] + ", " + placeShot[1]);
-//                        p2pOpponentPlay(placeShot[0], placeShot[1]);
-//
-//                    }
                     mqttHandler.getClient().setCallback(new MqttCallback() {
                         @Override
                         public void connectionLost(Throwable cause) {
@@ -241,18 +182,18 @@ public class MainActivity extends AppCompatActivity {
 
                         @Override
                         public void messageArrived(String topic, MqttMessage message) throws Exception {
-                            MqttResponse mqttResponse = Common.convertStringJsonToMqttObject(new String(message.getPayload()));
-                            Log.d(MQTT_TAG, mqttResponse.getMessage());
-                            if (mqttResponse.getMessage() == null) {
+                            MqttObject mqttObject = Common.convertStringJsonToMqttObject(new String(message.getPayload()));
+                            Log.d(MQTT_TAG, mqttObject.getMessage());
+                            if (mqttObject.getMessage() == null) {
                                 //Connection lost handler
                                 Log.d(MQTT_TAG, "Connection Lost!, in");
                                 toast("Connection Lost! Now playing single player game against computer");
                                 //allow user to change AI difficulty again
                                 opponentSelect.setEnabled(true);
                                 return;
-                            } else if (Objects.equals(mqttResponse.getMessage(),NetworkAdapter.PLACED_SHIPS)) {
+                            } else if (Objects.equals(mqttObject.getMessage(),NetworkAdapter.PLACED_SHIPS)) {
                                 Log.d(MQTT_TAG, "Received place ships message?? Shouldn't have found one, debug");
-                            } else if (Objects.equals(mqttResponse.getMessage(),NetworkAdapter.NEW_GAME)) {
+                            } else if (Objects.equals(mqttObject.getMessage(),NetworkAdapter.NEW_GAME)) {
                                 Log.d(MQTT_TAG, "New game requested, dialog given with yes or no options to accept or reject request"); //should send accept message message and reset game
                                 resetPromptDialog(getString(R.string.reset_game_connected_prompt), new DialogInterface.OnClickListener() {
                                     public void onClick(DialogInterface dialog, int which) {
@@ -274,20 +215,20 @@ public class MainActivity extends AppCompatActivity {
 
                                     }
                                 });
-                            } else if (Objects.equals(mqttResponse.getMessage(),NetworkAdapter.REJECT_NEW_GAME_REQUEST)) {
+                            } else if (Objects.equals(mqttObject.getMessage(),NetworkAdapter.REJECT_NEW_GAME_REQUEST)) {
                                 toast("New game request rejected  by other player");
-                            } else if (Objects.equals(mqttResponse.getMessage(),NetworkAdapter.ACCEPT_NEW_GAME_REQUEST)) {
+                            } else if (Objects.equals(mqttObject.getMessage(),NetworkAdapter.ACCEPT_NEW_GAME_REQUEST)) {
                                 Log.d(MQTT_TAG, "Accepted new game request");  //should send accept message message
 
                                 if (NetworkAdapter.hasConnection()) {
                                     NetworkAdapter.writeStopReadingMessage();
                                 }
                                 segueToPlaceShipsActivity();
-                            } else if (Objects.equals(mqttResponse.getMessage(),NetworkAdapter.STOP_READING)) { //TODO remove if everything is broken
+                            } else if (Objects.equals(mqttObject.getMessage(),NetworkAdapter.STOP_READING)) { //TODO remove if everything is broken
                                 Log.d(MQTT_TAG, "STOPPED READING MESSAGE IN MAINACTIVITY CLASS");
                                 return;
-                            } else if (Objects.equals(mqttResponse.getMessage(),NetworkAdapter.PLACE_SHOT)) {
-                                Position position = Common.convertMapToObject((LinkedHashMap<String, Object>) mqttResponse.getData(),Position.class);
+                            } else if (Objects.equals(mqttObject.getMessage(),NetworkAdapter.PLACE_SHOT)) {
+                                Position position = Common.convertMapToObject((LinkedHashMap<String, Object>) mqttObject.getData(),Position.class);
                                 if (position.getX() == null || position.getY() == null) {
                                     Log.d(MQTT_TAG, "Found no coordinates");
                                     return;
@@ -352,7 +293,6 @@ public class MainActivity extends AppCompatActivity {
                 alertDialog.show();
             }
         });
-
     }
 
 

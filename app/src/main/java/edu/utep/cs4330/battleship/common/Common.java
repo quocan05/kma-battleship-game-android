@@ -7,8 +7,7 @@ import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 
-import edu.utep.cs4330.battleship.dto.request.LoginRequest;
-import edu.utep.cs4330.battleship.dto.response.MqttResponse;
+import edu.utep.cs4330.battleship.dto.response.MqttObject;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -19,9 +18,9 @@ public class Common {
         return gson.toJson(object);
     }
 
-    public static MqttResponse convertStringJsonToMqttObject(String json) {
+    public static MqttObject convertStringJsonToMqttObject(String json) {
         Gson gson = new Gson();
-        return gson.fromJson(json, MqttResponse.class);
+        return gson.fromJson(json, MqttObject.class);
     }
 
     public static <T> T convertMapToObject(LinkedHashMap<String, Object> map, Class<T> clazz) {
@@ -89,4 +88,6 @@ public class Common {
         }
 
     }
+
+
 }

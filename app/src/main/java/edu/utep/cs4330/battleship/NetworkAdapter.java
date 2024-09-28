@@ -8,7 +8,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-import edu.utep.cs4330.battleship.dto.response.MqttResponse;
+import edu.utep.cs4330.battleship.dto.response.MqttObject;
 import edu.utep.cs4330.battleship.dto.object.Position;
 import edu.utep.cs4330.battleship.service.MqttHandler;
 
@@ -271,25 +271,25 @@ public class NetworkAdapter {
     }
 
     static void writeAcceptNewGameMessage(String topic) {
-        mqttHandler.publish(topic, new MqttResponse(ACCEPT_NEW_GAME_REQUEST, null));
+        mqttHandler.publish(topic, new MqttObject(ACCEPT_NEW_GAME_REQUEST, null));
     }
 
     static void writeRejectNewGameMessage(String topic) {
-        mqttHandler.publish(topic, new MqttResponse(REJECT_NEW_GAME_REQUEST, null));
+        mqttHandler.publish(topic, new MqttObject(REJECT_NEW_GAME_REQUEST, null));
     }
 
     static void writeNewGameMessage(String topic) {
-        mqttHandler.publish(topic, new MqttResponse(NEW_GAME, null));
+        mqttHandler.publish(topic, new MqttObject(NEW_GAME, null));
     }
     static void writeStopReadingMessage(String topic) {
-        mqttHandler.publish(topic, new MqttResponse(STOP_READING, null));
+        mqttHandler.publish(topic, new MqttObject(STOP_READING, null));
     }
 
     static void writePlaceShotMessage(String topic, Integer x, Integer y) {
-        mqttHandler.publish(topic, new MqttResponse(PLACE_SHOT, new Position(x,y)));
+        mqttHandler.publish(topic, new MqttObject(PLACE_SHOT, new Position(x,y)));
     }
     static void writeBoardMessage(String topic, Board board) {
-        mqttHandler.publish(topic,new MqttResponse(PLACED_SHIPS,board));
+        mqttHandler.publish(topic,new MqttObject(PLACED_SHIPS,board));
     }
 
     /**

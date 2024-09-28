@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -33,7 +32,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import edu.utep.cs4330.battleship.common.Common;
-import edu.utep.cs4330.battleship.dto.response.MqttResponse;
+import edu.utep.cs4330.battleship.dto.response.MqttObject;
 import edu.utep.cs4330.battleship.service.MqttHandler;
 
 /**
@@ -230,23 +229,23 @@ public class PlaceShipsActivity extends AppCompatActivity {
 
                         @Override
                         public void messageArrived(String topic, MqttMessage message) throws Exception {
-                            MqttResponse mqttResponse = Common.convertStringJsonToMqttObject(new String(message.getPayload()));
+                            MqttObject mqttObject = Common.convertStringJsonToMqttObject(new String(message.getPayload()));
                             String msg = NetworkAdapter.readMessage();
                             Log.d("wifiMe", "Message received IN PLACE SHIP ACTIVITY: " + msg);
 
-                            if (mqttResponse == null) {
+                            if (mqttObject == null) {
                                 //Connection lost handler
                                 Log.d("wifiMe", "Connection Lost!");
                                 toast("Connection Lost! Now playing single player game against computer");
                                 Log.d("wifiMe", "Has connection? " + NetworkAdapter.hasConnection());
                                 return;
                             }
-                            else if(Objects.equals(mqttResponse.getMessage(),NetworkAdapter.STOP_READING)){
+                            else if(Objects.equals(mqttObject.getMessage(),NetworkAdapter.STOP_READING)){
                                 return;
                             }
-                            else if (Objects.equals(mqttResponse.getMessage(),NetworkAdapter.PLACED_SHIPS)) {
+                            else if (Objects.equals(mqttObject.getMessage(),NetworkAdapter.PLACED_SHIPS)) {
                                 Log.d("wifiMe", "Found board message");
-                                Board  board = Common.convertMapToObject((LinkedHashMap<String, Object>) mqttResponse.getData(),Board.class);
+                                Board  board = Common.convertMapToObject((LinkedHashMap<String, Object>) mqttObject.getData(),Board.class);
                                 //Gets board
                                 opponentBoard = board;
                                 Log.d("wifiMe", "Decipher done"); //Why does it sometimes not reach this message, if donePlacingShips is true?

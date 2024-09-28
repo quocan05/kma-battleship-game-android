@@ -1,12 +1,15 @@
 package edu.utep.cs4330.battleship.dto.response;
 
-public class MqttResponse {
+public class MqttObject {
     private String message;
     private Object data;
 
-    public MqttResponse(String message, Object data) {
+    public MqttObject(String message, Object data) {
         this.message = message;
         this.data = data;
+    }
+
+    public MqttObject() {
     }
 
     public String getMessage() {
