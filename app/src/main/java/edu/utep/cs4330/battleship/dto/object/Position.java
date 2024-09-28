@@ -1,4 +1,4 @@
-package edu.utep.cs4330.battleship.dto;
+package edu.utep.cs4330.battleship.dto.object;
 
 public class Position {
     private Integer x = 0;

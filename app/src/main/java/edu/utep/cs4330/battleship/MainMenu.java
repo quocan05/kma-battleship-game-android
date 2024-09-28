@@ -42,4 +42,9 @@ public class MainMenu extends Activity {
             }
         });
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
 }

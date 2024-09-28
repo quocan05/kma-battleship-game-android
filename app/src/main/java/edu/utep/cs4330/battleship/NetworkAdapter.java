@@ -9,7 +9,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 import edu.utep.cs4330.battleship.dto.response.MqttResponse;
-import edu.utep.cs4330.battleship.dto.Position;
+import edu.utep.cs4330.battleship.dto.object.Position;
 import edu.utep.cs4330.battleship.service.MqttHandler;
 
 /**
@@ -157,77 +157,77 @@ public class NetworkAdapter {
         return null;
     }
 
-    /**
-     * Given the board String representation converts it back to the original board and returns it
-     */
-    static Board decipherPlaceShips(String opponentBoard) {
-        if (opponentBoard == null || !opponentBoard.startsWith(PLACED_SHIPS)) {
-            return null;
-        }
-        opponentBoard = opponentBoard.substring(NetworkAdapter.PLACED_SHIPS.length());
-
-        Log.d("wifiMe", "Attempting to convert string to board, the string: " + opponentBoard);
-        Board b = new Board(10);
-        int traverseString = 0;
-        char[] tb = opponentBoard.toCharArray();
-        for (int i = 0; i < b.size(); i++) {
-            for (int j = 0; j < b.size(); j++) {
-                int shipType = tb[traverseString];
-                Place place = b.placeAt(j, i);
-
-                if (shipType == '5')
-                    place.setShip(new Ship("aircraftcarrier", 5));
-                else if (shipType == '4')
-                    place.setShip(new Ship("battleship", 4));
-                else if (shipType == '3')
-                    place.setShip(new Ship("submarine", 3));
-                else if (shipType == '2')
-                    place.setShip(new Ship("frigate", 2));
-                else if (shipType == '1')
-                    place.setShip(new Ship("minesweeper", 1));
-                else {
-                    //Don't set a ship
-                }
-
-                traverseString++;
-            }
-        }
-
-        Log.d("wifiMe", "Deciphered board " + b.toString());
-        return b;
-    }
-
-
-    /**
-     * NOTE METHOD DOES NOT WORK IF BOARD IS OF SIZE BIGGER THAN 10, needs to be changed slightly to work with boards size bigger than 10
-     *
-     * @return null if was not a placeShot message, or message did not have 2 coordinates specified
-     * @return integer array of size 2 with coordinates of places shot, coordinates use 0 based index, (0,0) - top left corner.  int[0] - x coordinate, int[1] - y coordinate
-     */
-    public static int[] decipherPlaceShot(String msg) {
-        if (msg == null || !msg.startsWith(PLACE_SHOT)) {
-            return null;
-        }
-        int[] coordinatesShot = new int[2];
-        boolean firstDigitFound = false;
-        for (int i = 0; i < msg.length(); i++) {
-            char letter = msg.charAt(i);
-
-            if (isDigit(letter)) {
-                int digitFound = Character.getNumericValue(letter);
-
-                if (firstDigitFound) {
-                    coordinatesShot[1] = digitFound;
-                    return coordinatesShot;
-                } else {
-                    coordinatesShot[0] = digitFound;
-                }
-                firstDigitFound = true;
-            }
-        }
-
-        return coordinatesShot;
-    }
+//    /**
+//     * Given the board String representation converts it back to the original board and returns it
+//     */
+//    static Board decipherPlaceShips(String opponentBoard) {
+//        if (opponentBoard == null || !opponentBoard.startsWith(PLACED_SHIPS)) {
+//            return null;
+//        }
+//        opponentBoard = opponentBoard.substring(NetworkAdapter.PLACED_SHIPS.length());
+//
+//        Log.d("wifiMe", "Attempting to convert string to board, the string: " + opponentBoard);
+//        Board b = new Board(10);
+//        int traverseString = 0;
+//        char[] tb = opponentBoard.toCharArray();
+//        for (int i = 0; i < b.size(); i++) {
+//            for (int j = 0; j < b.size(); j++) {
+//                int shipType = tb[traverseString];
+//                Place place = b.placeAt(j, i);
+//
+//                if (shipType == '5')
+//                    place.setShip(new Ship("aircraftcarrier", 5));
+//                else if (shipType == '4')
+//                    place.setShip(new Ship("battleship", 4));
+//                else if (shipType == '3')
+//                    place.setShip(new Ship("submarine", 3));
+//                else if (shipType == '2')
+//                    place.setShip(new Ship("frigate", 2));
+//                else if (shipType == '1')
+//                    place.setShip(new Ship("minesweeper", 1));
+//                else {
+//                    //Don't set a ship
+//                }
+//
+//                traverseString++;
+//            }
+//        }
+//
+//        Log.d("wifiMe", "Deciphered board " + b.toString());
+//        return b;
+//    }
+//
+//
+//    /**
+//     * NOTE METHOD DOES NOT WORK IF BOARD IS OF SIZE BIGGER THAN 10, needs to be changed slightly to work with boards size bigger than 10
+//     *
+//     * @return null if was not a placeShot message, or message did not have 2 coordinates specified
+//     * @return integer array of size 2 with coordinates of places shot, coordinates use 0 based index, (0,0) - top left corner.  int[0] - x coordinate, int[1] - y coordinate
+//     */
+//    public static int[] decipherPlaceShot(String msg) {
+//        if (msg == null || !msg.startsWith(PLACE_SHOT)) {
+//            return null;
+//        }
+//        int[] coordinatesShot = new int[2];
+//        boolean firstDigitFound = false;
+//        for (int i = 0; i < msg.length(); i++) {
+//            char letter = msg.charAt(i);
+//
+//            if (isDigit(letter)) {
+//                int digitFound = Character.getNumericValue(letter);
+//
+//                if (firstDigitFound) {
+//                    coordinatesShot[1] = digitFound;
+//                    return coordinatesShot;
+//                } else {
+//                    coordinatesShot[0] = digitFound;
+//                }
+//                firstDigitFound = true;
+//            }
+//        }
+//
+//        return coordinatesShot;
+//    }
 
     /**
      * Writes the board to the other player using the Board's toString method

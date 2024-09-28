@@ -29,7 +29,7 @@ import java.util.Objects;
 
 import edu.utep.cs4330.battleship.common.Common;
 import edu.utep.cs4330.battleship.dto.response.MqttResponse;
-import edu.utep.cs4330.battleship.dto.Position;
+import edu.utep.cs4330.battleship.dto.object.Position;
 import edu.utep.cs4330.battleship.service.MqttHandler;
 
 /**
