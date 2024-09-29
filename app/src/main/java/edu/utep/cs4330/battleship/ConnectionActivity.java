@@ -54,11 +54,6 @@ public class ConnectionActivity extends AppCompatActivity {
 
     private final IntentFilter intentFilter = new IntentFilter();
 
-
-    /**
-     * Spinner that displays all devices that are within wifi-direct range
-     */
-//    private Spinner deviceSpinner;
     private Spinner userSpinner;
 
     /**
@@ -93,21 +88,13 @@ public class ConnectionActivity extends AppCompatActivity {
         userSingleton = UserSingleton.getInstance();
         beService = BEService.getInstance();
         setContentView(R.layout.activity_connection);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-
-
 
         userSpinner = (Spinner) findViewById(R.id.list);
         List<User> users = new LinkedList<>();
         this.handleRefresh(userSingleton.getId());
-
         final ConnectionActivity activity = this;
-        mqttHandler.subscribe("battleship/"+userSingleton.getId());
-        startReadingNetworkMessages();
-
+        mqttHandler.subscribe("battleship/" + userSingleton.getId());
+//        startReadingNetworkMessages();
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -193,9 +180,9 @@ public class ConnectionActivity extends AppCompatActivity {
         Thread connect = new Thread(new Runnable() {
             @Override
             public void run() {
-                User user =(User) userSpinner.getSelectedItem();
-                MqttObject mqttObject = new MqttObject(NetworkAdapter.NEW_GAME,new NewGameRequest(user.getId(),user.getUsername()));
-                mqttHandler.publish("battleship/"+user.getId(),mqttObject);
+                User user = (User) userSpinner.getSelectedItem();
+                MqttObject mqttObject = new MqttObject(NetworkAdapter.NEW_GAME, new NewGameRequest(user.getId(), user.getUsername()));
+                mqttHandler.publish("battleship/" + user.getId(), mqttObject);
             }
         });
         connect.start();
@@ -304,7 +291,7 @@ public class ConnectionActivity extends AppCompatActivity {
                                 TextView userId = view.findViewById(R.id.user_id);
                                 TextView userName = view.findViewById(R.id.user_name);
 
-                                userId.setText(String.valueOf(position+1));  // Gán ID
+                                userId.setText(String.valueOf(position + 1));  // Gán ID
                                 userName.setText(user.getUsername());         // Gán tên
 
                                 return view;
@@ -336,78 +323,81 @@ public class ConnectionActivity extends AppCompatActivity {
     }
 
 
-    void startReadingNetworkMessages() {
-        Thread readMessages = new Thread(new Runnable() {
-            public void run() {
-                while (true) {
-                    mqttHandler.getClient().setCallback(new MqttCallback() {
-                        @Override
-                        public void connectionLost(Throwable cause) {
-
-                        }
-                        @Override
-                        public void messageArrived(String topic, MqttMessage message) throws Exception {
-                            MqttObject mqttObject = Common.convertStringJsonToMqttObject(new String(message.getPayload()));
-                            Log.d(MQTT_TAG, mqttObject.getMessage());
-                            if (Objects.equals(mqttObject.getMessage(),NetworkAdapter.NEW_GAME)) {
-                                Log.d(MQTT_TAG, "New game requested, dialog given with yes or no options to accept or reject request"); //should send accept message message and reset game
-                                resetPromptDialog(getString(R.string.reset_game_connected_prompt), new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int which) {
-
-                                        if (NetworkAdapter.hasConnection()) {
-                                            NetworkAdapter.writeAcceptNewGameMessage();
-                                            NetworkAdapter.writeStopReadingMessage();
-                                        }
-//                                        segueToPlaceShipsActivity();
-                                    }
-                                }, new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        new Thread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                NetworkAdapter.writeRejectNewGameMessage();
-                                            }
-                                        }).start();
-                                    }
-                                });
-                            } else if (Objects.equals(mqttObject.getMessage(),NetworkAdapter.REJECT_NEW_GAME_REQUEST)) {
-
-                            } else if (Objects.equals(mqttObject.getMessage(),NetworkAdapter.ACCEPT_NEW_GAME_REQUEST)) {
-                                Log.d(MQTT_TAG, "Accepted new game request");  //should send accept message message
-
-                                if (NetworkAdapter.hasConnection()) {
-                                    NetworkAdapter.writeStopReadingMessage();
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void deliveryComplete(IMqttDeliveryToken token) {
-
-                        }
-                    });
-
-                }
-            }
-        });
-        readMessages.start();
-    }
-    public void resetPromptDialog(final String message, final DialogInterface.OnClickListener acceptListener, final DialogInterface.OnClickListener rejectListener) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                AlertDialog alertDialog = new AlertDialog.Builder(ConnectionActivity.this).create();
-                alertDialog.setTitle(getString(R.string.reset_game_title));
-                alertDialog.setMessage(message);//(getString(R.string.reset_game_prompt)
-
-                //Yes button, and listener for if button is pressed
-                alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "YES", acceptListener);
-
-                //No button
-                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "NO", rejectListener);
-                alertDialog.show();
-            }
-        });
-    }
+//    void startReadingNetworkMessages() {
+//        Thread thread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                if(mqttHandler.isConnected()){
+//                    mqttHandler.getClient().setCallback(new MqttCallback() {
+//                        @Override
+//                        public void connectionLost(Throwable cause) {
+//
+//                        }
+//
+//                        @Override
+//                        public void messageArrived(String topic, MqttMessage message) throws Exception {
+//                            MqttObject mqttObject = Common.convertStringJsonToMqttObject(new String(message.getPayload()));
+//                            Log.d(MQTT_TAG, mqttObject.getMessage());
+//                            if (Objects.equals(mqttObject.getMessage(), NetworkAdapter.NEW_GAME)) {
+//                                Log.d(MQTT_TAG, "New game requested, dialog given with yes or no options to accept or reject request"); //should send accept message message and reset game
+////                                resetPromptDialog(getString(R.string.reset_game_connected_prompt), new DialogInterface.OnClickListener() {
+////                                    public void onClick(DialogInterface dialog, int which) {
+////
+////                                        if (NetworkAdapter.hasConnection()) {
+////                                            NetworkAdapter.writeAcceptNewGameMessage();
+////                                            NetworkAdapter.writeStopReadingMessage();
+////                                        }
+//////                                        segueToPlaceShipsActivity();
+////                                    }
+////                                }, new DialogInterface.OnClickListener() {
+////                                    public void onClick(DialogInterface dialog, int which) {
+////                                        new Thread(new Runnable() {
+////                                            @Override
+////                                            public void run() {
+////                                                NetworkAdapter.writeRejectNewGameMessage();
+////                                            }
+////                                        }).start();
+////                                    }
+////                                });
+//                            } else if (Objects.equals(mqttObject.getMessage(), NetworkAdapter.REJECT_NEW_GAME_REQUEST)) {
+//
+//                            } else if (Objects.equals(mqttObject.getMessage(), NetworkAdapter.ACCEPT_NEW_GAME_REQUEST)) {
+//                                Log.d(MQTT_TAG, "Accepted new game request");  //should send accept message message
+//
+//                                if (NetworkAdapter.hasConnection()) {
+//                                    NetworkAdapter.writeStopReadingMessage();
+//                                }
+//                            }
+//                        }
+//
+//                        @Override
+//                        public void deliveryComplete(IMqttDeliveryToken token) {
+//
+//                        }
+//                    });
+//                }
+//
+//            }
+//        });
+//        thread.start();
+//
+//    }
+//    public void resetPromptDialog(final String message, final DialogInterface.OnClickListener acceptListener, final DialogInterface.OnClickListener rejectListener) {
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                AlertDialog alertDialog = new AlertDialog.Builder(ConnectionActivity.this).create();
+//                alertDialog.setTitle(getString(R.string.reset_game_title));
+//                alertDialog.setMessage(message);//(getString(R.string.reset_game_prompt)
+//
+//                //Yes button, and listener for if button is pressed
+//                alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "YES", acceptListener);
+//
+//                //No button
+//                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "NO", rejectListener);
+//                alertDialog.show();
+//            }
+//        });
+//    }
 
 }
