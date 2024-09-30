@@ -26,6 +26,8 @@ import java.util.Objects;
 import static java.lang.Thread.sleep;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -79,11 +81,11 @@ public class PlaceShipsActivity extends AppCompatActivity {
      */
     private boolean donePlacingShips = false;
 
-    private Thread readMessages;
     private MqttHandler mqttHandler;
     private Integer opponentId;
     private String TAG = "MQTT";
     private UserSingleton userSingleton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         userSingleton = UserSingleton.getInstance();
@@ -91,8 +93,8 @@ public class PlaceShipsActivity extends AppCompatActivity {
 
         RelativeLayout layout = (RelativeLayout) getLayoutInflater().inflate(R.layout.content_place_ships, null);
         setContentView(layout);
-        mqttHandler = new MqttHandler();
-        mqttHandler.subscribe(getTopic(userSingleton.getId()));
+
+
         boardView = (BoardView) findViewById(R.id.placeShipsBoardView);
         playerBoard = new Board();
         boardView.setBoard(playerBoard);
@@ -129,9 +131,11 @@ public class PlaceShipsActivity extends AppCompatActivity {
         opponentId = (Integer) intent.getSerializableExtra("opponent_user");
 
         if (opponentId != null) {
+            mqttHandler = new ViewModelProvider(this).get(MqttHandler.class);
+            mqttHandler.subscribe(getTopic(userSingleton.getId()));
             startReadingMessage();
-        }else {
-            opponentId = 4;
+        } else {
+
         }
 
     }
@@ -221,87 +225,30 @@ public class PlaceShipsActivity extends AppCompatActivity {
      * Creates new thread and blocks that thread, starts reading the messages and handling them appropriately
      */
     void startReadingMessage() {
+        mqttHandler.getMqttMessage().observe(this, new Observer<MqttObject>() {
+            @Override
+            public void onChanged(MqttObject mqttObject) {
+                String msg = (String) mqttObject.getData();
+                Log.d(TAG, "Message received IN PLACE SHIP ACTIVITY: " + msg);
 
-        readMessages = new Thread(new Runnable() {
-            public void run() {
-                mqttHandler.getClient().setCallback(new MqttCallback() {
-                    @Override
-                    public void connectionLost(Throwable cause) {
-                        Log.d(TAG, "LOST CONNECTION");
+                if (Objects.equals(mqttObject.getMessage(), NetworkAdapter.PLACED_SHIPS)) {
+                    Log.d(TAG, "Found board message");
 
+                    Board board = NetworkAdapter.decipherPlaceShips(msg);
+                    //Gets board
+                    opponentBoard = board;
+                    Log.d(TAG, "Decipher done"); //Why does it sometimes not reach this message, if donePlacingShips is true?
+                    //If you are already done placing ships, and you have received your opponent's board, then startActivity
+                    if (donePlacingShips) {
+                        //readMessages.interrupt();
+                        GameManager game = new GameManager(playerBoard, opponentBoard, true);
+                        segueToActivity(game);
+                        //return;
                     }
-
-                    @Override
-                    public void messageArrived(String topic, MqttMessage message) throws Exception {
-                        MqttObject mqttObject = Common.convertStringJsonToMqttObject(new String(message.getPayload()));
-                        String msg = (String) mqttObject.getData();
-                        Log.d(TAG, "Message received IN PLACE SHIP ACTIVITY: " + msg);
-
-                        if (Objects.equals(mqttObject.getMessage(), NetworkAdapter.PLACED_SHIPS)) {
-                            Log.d(TAG, "Found board message");
-
-                            Board board = NetworkAdapter.decipherPlaceShips(msg);
-                            //Gets board
-                            opponentBoard = board;
-                            Log.d(TAG, "Decipher done"); //Why does it sometimes not reach this message, if donePlacingShips is true?
-                            //If you are already done placing ships, and you have received your opponent's board, then startActivity
-                            if (donePlacingShips) {
-                                //readMessages.interrupt();
-                                GameManager game = new GameManager(playerBoard, opponentBoard, true);
-                                segueToActivity(game);
-                                //return;
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void deliveryComplete(IMqttDeliveryToken token) {
-
-                    }
-                });
+                }
             }
         });
-        readMessages.start();
     }
-
-    /**
-     * No need to check if there is a connection in this method, that was done in ConnectionActivity,
-     * if it is lost, ConnectionActivity should also take care of that using listeners.
-     */
-    /*private void readTheirBoard() {
-
-        int timeout = 20;
-        while (timeout > 0) {
-            String msg = NetworkAdapter.readMessage();
-            Log.d("wifiMe", "Message received: " + msg);
-
-            if (msg == null) {
-                toast("Waiting on other player to place their ships");
-
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                return;
-            } else if (msg.startsWith(NetworkAdapter.PLACED_SHIPS)) {
-                Log.d("wifiMe", "Found board message");
-
-                //Gets board
-                opponentBoard = NetworkAdapter.decipherPlaceShips(msg);
-                Log.d("wifiMe", "Decipher done"); //Why does it sometimes not reach this message, if donePlacingShips is true?
-                //If you are already done placing ships, and you have received your opponent's board, then startActivity
-            } else {
-                toast("Opponent timed out.");
-                //TODO: Throw some error, since message is not what we expected it to be.
-            }
-
-            timeout--;
-        }
-    }*/
-
-
     /**
      * Returns true if all ships have been placed
      */
@@ -332,7 +279,7 @@ public class PlaceShipsActivity extends AppCompatActivity {
 
                 bundle.putSerializable("gameManager", game);
                 i.putExtra("gameManager", bundle);
-                i.putExtra("opponent_user",opponentId);
+                i.putExtra("opponent_user", opponentId);
                 startActivity(i);
             }
         });
@@ -352,12 +299,11 @@ public class PlaceShipsActivity extends AppCompatActivity {
             @Override
             public void run() {
                 //If there is a p2p connection
-                if (opponentId!=null) {
-                    NetworkAdapter.writeBoardMessage(getTopic(opponentId),playerBoard);
+                if (opponentId != null) {
+                    NetworkAdapter.writeBoardMessage(getTopic(opponentId), playerBoard);
                     Log.d("wifiMe", "Board was sent");
                     //If other player has given us their board
                     if (opponentBoard != null) {
-                        NetworkAdapter.writeStopReadingMessage();
                         GameManager game = new GameManager(playerBoard, opponentBoard, false);
                         segueToActivity(game);
                     } else {
@@ -558,7 +504,26 @@ public class PlaceShipsActivity extends AppCompatActivity {
         });
     }
 
-    private String getTopic(Integer id){
-        return "battleship/"+id;
+    private String getTopic(Integer id) {
+        return "battleship/" + id;
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(opponentId!=null){
+            this.mqttHandler =  new ViewModelProvider(this).get(MqttHandler.class);
+            mqttHandler.subscribe(getTopic(userSingleton.getId()));
+            startReadingMessage();
+        }
+    }
+//
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        if(opponentId!=null){
+//            mqttHandler.unsubscribe(getTopic(userSingleton.getId()));
+//            mqttHandler.disconnect();
+//        }
+//    }
 }

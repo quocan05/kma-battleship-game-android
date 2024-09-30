@@ -48,39 +48,6 @@ public class NetworkAdapter {
         mqttHandler.subscribe("battleship/" + userSingleton.getId());
     }
     /**
-     * Reads messages  by the other player and returns them, blocks the calling thread until a message is recieved
-     *
-     * @return null if connection was lost
-     */
-    static String readMessage() {
-
-//        try {
-//            Log.d("wifiMe", "Going to read messages part 1");
-//            if (in == null) {
-//                //Only returns null if sockets aren't set correctly
-//            }
-//
-//
-//            Log.d("wifiMe", "Going to read messages part 2");
-//
-//            String msg;
-//
-//            while ((msg = in.readLine()) != null) {
-//                Log.d("wifiMe", "Got message");
-//                if (msg.equals("") || msg.equals(" ")) { //Checking " " probably unnecessary
-//                    continue;
-//                }
-//                return msg;
-//            }
-//
-//        } catch (IOException e) {
-//            Log.d("wifiMe", "IOException ON NETWORK ADAPTER CLASS, READ MESSAGES METHOD");
-//        }
-//        Log.d("wifiMe", "Return msg null");
-        return null;
-    }
-
-    /**
      * Given the board String representation converts it back to the original board and returns it
      */
     static Board decipherPlaceShips(String opponentBoard) {
@@ -121,73 +88,6 @@ public class NetworkAdapter {
     }
 
 
-    /**
-     * NOTE METHOD DOES NOT WORK IF BOARD IS OF SIZE BIGGER THAN 10, needs to be changed slightly to work with boards size bigger than 10
-     *
-     * @return null if was not a placeShot message, or message did not have 2 coordinates specified
-     * @return integer array of size 2 with coordinates of places shot, coordinates use 0 based index, (0,0) - top left corner.  int[0] - x coordinate, int[1] - y coordinate
-     */
-    public static int[] decipherPlaceShot(String msg) {
-        if (msg == null || !msg.startsWith(PLACE_SHOT)) {
-            return null;
-        }
-        int[] coordinatesShot = new int[2];
-        boolean firstDigitFound = false;
-        for (int i = 0; i < msg.length(); i++) {
-            char letter = msg.charAt(i);
-
-            if (isDigit(letter)) {
-                int digitFound = Character.getNumericValue(letter);
-
-                if (firstDigitFound) {
-                    coordinatesShot[1] = digitFound;
-                    return coordinatesShot;
-                } else {
-                    coordinatesShot[0] = digitFound;
-                }
-                firstDigitFound = true;
-            }
-        }
-
-        return coordinatesShot;
-    }
-
-    /**
-     * Writes the board to the other player using the Board's toString method
-     */
-    static void writeBoardMessage(Board board) {
-
-        Log.d("wifiMe", "Board being sent: " + board.toString());
-    }
-
-
-    /**
-     * Writes a place shot message, and places it in given coordinates
-     */
-    static void writePlaceShotMessage(int x, int y) {
-
-    }
-    /**
-     * Writes a message to other player to stop reading messages
-     */
-    static void writeStopReadingMessage() {
-
-    }
-
-    /**
-     * Writes a message to other player to request a new game
-     */
-    static void writeNewGameMessage() {
-
-    }
-
-    /**
-     * Writes a message to other player to accept the new game request
-     */
-    static void writeAcceptNewGameMessage() {
-
-    }
-
     static void writeAcceptNewGameMessage(String topic) {
         mqttHandler.publish(topic, new MqttObject(ACCEPT_NEW_GAME_REQUEST, userSingleton.getId(),userSingleton.getUsername(),null));
     }
@@ -211,11 +111,6 @@ public class NetworkAdapter {
     }
 
     /**
-     * Writes a message to other player to reject the new game request
-     */
-    static void writeRejectNewGameMessage() {
-
-    }
 
     /**
      * Returns true if there is a connection with the other player
