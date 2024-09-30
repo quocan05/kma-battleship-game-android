@@ -1,17 +1,17 @@
 package edu.utep.cs4330.battleship.dto.response;
 
+import com.google.gson.internal.LinkedTreeMap;
+
 public class NewGameResponse {
     private Integer id;
-    private String name;
-    private Boolean status;
+    private String username;
 
     public NewGameResponse() {
     }
 
-    public NewGameResponse(Integer id, String name, Boolean status) {
+    public NewGameResponse(Integer id, String username) {
         this.id = id;
-        this.name = name;
-        this.status = status;
+        this.username = username;
     }
 
     public Integer getId() {
@@ -22,19 +22,17 @@ public class NewGameResponse {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUsername(String name) {
+        this.username = name;
     }
 
-    public Boolean getStatus() {
-        return status;
-    }
-
-    public void setStatus(Boolean status) {
-        this.status = status;
+    public void convertToNewGameResponse(LinkedTreeMap<String,String> treeMap){
+        Integer id = Integer.valueOf(String.valueOf(treeMap.get("id")).charAt(0))-48;
+        setId(id);
+        setUsername(treeMap.get("username"));
     }
 }

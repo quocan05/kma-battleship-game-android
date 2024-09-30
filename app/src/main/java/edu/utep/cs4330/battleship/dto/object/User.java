@@ -3,14 +3,12 @@ package edu.utep.cs4330.battleship.dto.object;
 public class User {
     private Integer id;
     private String username;
-    private String name;
     public User() {
     }
 
-    public User(Integer id, String username, String name) {
+    public User(Integer id, String username) {
         this.id = id;
         this.username = username;
-        this.name = name;
     }
 
     public String getUsername() {
@@ -31,16 +29,9 @@ public class User {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     @Override
     public String toString() {
-        return name;
+        return username;
     }
 }

@@ -114,14 +114,9 @@ public class Login extends Activity {
                     LinkedTreeMap<String,String> linkedTreeMap = (LinkedTreeMap) beResponse.getData();
                     Integer id = Integer.valueOf(String.valueOf(linkedTreeMap.get("id")).charAt(0))-48;
                     userSingleton.setId(id);
-                    userSingleton.setName(linkedTreeMap.get("name"));
-////                    Toast.makeText(Login.this, "username:"+username+", password: "+password, Toast.LENGTH_SHORT).show();
-//                    Toast.makeText(Login.this,"SUCCESS LOGIN",Toast.LENGTH_SHORT).show();
-                    //ex go to main menu
+                    userSingleton.setUsername(linkedTreeMap.get("username"));
                     Intent i = new Intent(Login.this, MainMenu.class);
                     startActivity(i);
-                    MqttHandler mqttHandler = MqttHandler.getInstance();
-                    mqttHandler.subscribe("battleship/"+ id);
                 }
             }
         });
