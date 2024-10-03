@@ -32,6 +32,8 @@ import edu.utep.cs4330.battleship.service.MusicService;
 public class MainMenu extends Activity {
     Button single;
     Button multi;
+
+    Button historyBtn;
     Intent intentThemeSound;
 
     @Override
@@ -47,6 +49,7 @@ public class MainMenu extends Activity {
         //Buttons
         single = (Button) findViewById(R.id.single);
         multi = (Button) findViewById(R.id.multi);
+        historyBtn = findViewById(R.id.history);
 
         single.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,6 +63,14 @@ public class MainMenu extends Activity {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(MainMenu.this, ConnectionActivity.class);
+                startActivity(i);
+            }
+        });
+
+        historyBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(MainMenu.this, HistoryActivity.class);
                 startActivity(i);
             }
         });

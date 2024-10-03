@@ -44,6 +44,18 @@
             android:text="Multi-player"
             android:textColor="#FFFFFF"
             android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/history"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/army_button_background"
+            android:fontFamily="sans-serif-black"
+            android:padding="12dp"
+            android:text="History"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
     </LinearLayout>
 
 </LinearLayout>
