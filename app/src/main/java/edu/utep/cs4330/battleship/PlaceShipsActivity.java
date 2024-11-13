@@ -245,6 +245,8 @@ public class PlaceShipsActivity extends AppCompatActivity {
                         segueToActivity(game);
                         //return;
                     }
+                }else if(Objects.equals(mqttObject.getMessage(),"")) {
+
                 }
             }
         });

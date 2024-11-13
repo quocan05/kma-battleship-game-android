@@ -3,10 +3,16 @@ package edu.utep.cs4330.battleship.dto.history;
 public class HistoryResult {
     private String date;
     private String result;
+    private String opponent;
 
     public HistoryResult(String date, String result) {
         this.date = date;
         this.result = result;
+    }
+    public HistoryResult(String date, String result,String opponent) {
+        this.date = date;
+        this.result = result;
+        this.opponent = opponent;
     }
 
     public HistoryResult() {

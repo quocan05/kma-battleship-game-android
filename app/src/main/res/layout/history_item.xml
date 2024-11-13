@@ -1,24 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout"
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#4CAF50"
-    android:padding="16dp">
+        android:background="#4CAF50"
+    android:padding="16dp"
+    android:elevation="4dp">
+
+    <!-- Date -->
     <TextView
         android:id="@+id/textDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Date"
         android:textStyle="bold"
-        android:textSize="24sp"
-        android:layout_weight="1" />
+        android:textSize="20sp"
+        android:layout_weight="1"
+        android:paddingEnd="8dp"
+        />
 
+    <!-- Result -->
     <TextView
         android:id="@+id/textResult"
-        android:textSize="24sp"
+        android:textSize="20sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Result" />
+        android:text="Result"
+        android:paddingEnd="8dp"
+        />
+
+    <!-- Opponent -->
+    <TextView
+        android:id="@+id/textOpponentName"
+        android:textSize="20sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Opponent"
+        />
 
 </LinearLayout>

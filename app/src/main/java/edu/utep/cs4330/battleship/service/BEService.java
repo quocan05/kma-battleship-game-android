@@ -52,7 +52,7 @@ public class BEService {
 
 // Create the request
         Request request = new Request.Builder()
-                .url("http://13.212.249.56:8080/api/user/login")
+                .url("http://13.212.48.184:8080/api/user/login")
                 .post(body)
                 .build();
 

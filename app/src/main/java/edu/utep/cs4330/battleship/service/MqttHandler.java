@@ -28,7 +28,7 @@ public class MqttHandler extends ViewModel implements MqttCallback {
     private static final String username = "hoang";
     private static final String password = "100702";
     private static final String TAG = "MQTT_CLIENT";
-    private static final String brokeUrl = "tcp://13.212.249.56:1883";
+    private static final String brokeUrl = "tcp://13.212.48.184:1883";
     private MutableLiveData<MqttObject> mqttMessageLiveData = new MutableLiveData<MqttObject>();
 
     public LiveData<MqttObject> getMqttMessage() {

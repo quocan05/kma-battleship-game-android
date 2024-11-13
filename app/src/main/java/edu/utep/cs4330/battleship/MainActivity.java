@@ -24,18 +24,22 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.google.gson.internal.LinkedTreeMap;
 
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-
-import java.util.LinkedHashMap;
+import java.io.IOException;
 import java.util.Objects;
 
 import edu.utep.cs4330.battleship.common.Common;
+import edu.utep.cs4330.battleship.common.Constants;
 import edu.utep.cs4330.battleship.dto.UserSingleton;
+import edu.utep.cs4330.battleship.dto.request.RoomRequest;
+import edu.utep.cs4330.battleship.dto.response.BEResponse;
 import edu.utep.cs4330.battleship.dto.response.MqttObject;
 import edu.utep.cs4330.battleship.dto.object.Position;
+import edu.utep.cs4330.battleship.service.BEService;
 import edu.utep.cs4330.battleship.service.MqttHandler;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Request;
+import okhttp3.Response;
 
 /**
  * Created by Gerardo Cervantes and Eric Torres.
@@ -87,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     private MqttHandler mqttHandler;
     private UserSingleton userSingleton;
     private Integer opponentId;
+    private BEService beService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         userSingleton = UserSingleton.getInstance();
+        beService = BEService.getInstance();
 
 
         Intent intent = getIntent();
@@ -129,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
         if (opponentId != null) {
             //if there is a multiplayer game, disable the AI difficulty change setting
             mqttHandler = new ViewModelProvider(this).get(MqttHandler.class);
-            mqttHandler.subscribe(getTopic(userSingleton.getId()));
+            mqttHandler.subscribe(Common.getTopic(userSingleton.getId()));
             opponentSelect.setEnabled(false);
             strategyDescription.setText(getString(R.string.wifi_p2p_opponent));
             startReadingNetworkMessages();
@@ -162,8 +168,8 @@ public class MainActivity extends AppCompatActivity {
         playerBoardView.setBoard(playerBoard);
         opponentBoardView.setBoard(opponentBoard);
 
-        playerBoardView.displayBoardsShips(true);
-        opponentBoardView.displayBoardsShips(true); //TODO REMOVE TO PREVENT CHEATING
+        playerBoardView.displayBoardsShips(false);
+        opponentBoardView.displayBoardsShips(false); //TODO REMOVE TO PREVENT CHEATING
         opponentBoardView.addBoardTouchListener(new BoardView.BoardTouchListener() {
             @Override
             public void onTouch(int x, int y) {
@@ -197,8 +203,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(MQTT_TAG, "New game requested, dialog given with yes or no options to accept or reject request"); //should send accept message message and reset game
                     resetPromptDialog(getString(R.string.reset_game_connected_prompt), new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
-                            NetworkAdapter.writeAcceptNewGameMessage(getTopic(opponentId));
-                            mqttHandler.disconnect();
+                            NetworkAdapter.writeAcceptNewGameMessage(Common.getTopic(opponentId));
                             segueToPlaceShipsActivity();
                         }
                     }, new DialogInterface.OnClickListener() {
@@ -206,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
                             new Thread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    NetworkAdapter.writeRejectNewGameMessage(getTopic(opponentId));
+                                    NetworkAdapter.writeRejectNewGameMessage(Common.getTopic(opponentId));
                                 }
                             }).start();
 
@@ -260,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void resetGame(View view) {
         if (opponentId != null) {
-            NetworkAdapter.writeNewGameMessage(getTopic(opponentId));
+            NetworkAdapter.writeNewGameMessage(Common.getTopic(opponentId));
             toast("New game will start when other player accepts request");
         }
         //Doesn't ask user to reset the game if game is over or no shots have been made to the board
@@ -371,29 +376,29 @@ public class MainActivity extends AppCompatActivity {
         }
         updateTurnDisplay();
         updateBoards();
+        boolean playerWon = game.getOpponentPlayer().areAllShipsSunk();
+
         if (opponentId != null) {
-            boolean playerWon = game.getOpponentPlayer().areAllShipsSunk();
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     if (opponentId != null) {
                         Log.d("wifiMe", "Wrote message to opponent for placing shot");
-                        NetworkAdapter.writePlaceShotMessage(getTopic(opponentId), x, y);
+                        NetworkAdapter.writePlaceShotMessage(Common.getTopic(opponentId), x, y);
                     }
                 }
             }).start();
-            if (playerWon) {
-                updateWinDisplay(true);
-                resultsDialog(true, game.getShipsSunkCount(game.getPlayer()));
-                return;
-            }
-        }
-        else if (opponentId == null) {
+        } else if (opponentId == null) {
             Log.d("wifiMe", "Computer made a play");
             boolean isComputersTurn = game.getActivePlayer() != game.getPlayer();
             if (isComputersTurn) {
                 computerTurn();
             }
+        }
+        if (playerWon) {
+            updateWinDisplay(true);
+            resultsDialog(true, game.getShipsSunkCount(game.getPlayer()));
+            return;
         }
     }
 
@@ -421,9 +426,11 @@ public class MainActivity extends AppCompatActivity {
      * Updates the display which indicates whose which player won
      */
     public void updateWinDisplay(final boolean playerWon) {
+
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                createRoom(userSingleton.getId(),opponentId,playerWon);
                 if (playerWon) {
                     gameStatus.setText(getString(R.string.win_status));
                 } else {
@@ -497,6 +504,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 Intent intent = new Intent(activity, PlaceShipsActivity.class);
+                intent.putExtra("opponent_user", opponentId);
                 startActivity(intent);
             }
         });
@@ -679,55 +687,25 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private String getTopic(Integer id) {
-        return "battleship/" + id;
+
+
+    public void createRoom(Integer userId, Integer opponentId, Boolean playerWon) {
+        RoomRequest room = new RoomRequest(userId, opponentId,playerWon);
+        Request roRequest = Common.getRequest(room, Constants.CREATE_ROOM, Constants.POST);
+
+        beService.getClient().newCall(roRequest).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e("LoginError", "Request failed", e);
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(MQTT_TAG, "SUCCESS");
+                }
+            }
+        });
     }
-
-//    private void handleNewRoom() {
-//        NewRoomRequest roomRequest = new NewRoomRequest(userSingleton.getId(),((User) userSpinner.getSelectedItem()).getId());
-//        Gson gson = new Gson();
-//        Request request = Common.getRequest(roomRequest,Constants.CREATE_ROOM,Constants.POST);
-//
-//        beService.getClient().newCall(request).enqueue(new Callback() {
-//            @Override
-//            public void onFailure(Call call, IOException e) {
-//                Log.e("LoginError", "Request failed", e);
-////                Toast.makeText(Lou.this, "WRONG USERNAME OR PASSWORD", Toast.LENGTH_SHORT).show();
-//
-//            }
-//
-//            @Override
-//            public void onResponse(Call call, Response response) throws IOException {
-//                if (response.isSuccessful()) {
-//                    // handle response
-//                    String responseData = response.body().string();
-//                    BEResponse beResponse = gson.fromJson(responseData, BEResponse.class);
-//                    if(beResponse.getStatus()){
-//                        LinkedTreeMap<String,String> linkedTreeMap = (LinkedTreeMap) beResponse.getData();
-//                        Integer id = Integer.valueOf(String.valueOf(linkedTreeMap.get("id")).charAt(0))-48;
-//                        roomId = id;
-//                    }
-//                }
-//            }
-//        });
-//    }
-
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        if(opponentId!=null){
-//            new ViewModelProvider(this).get(MqttHandler.class);
-//            mqttHandler.connect();
-//            mqttHandler.subscribe(getTopic(userSingleton.getId()));
-//        }
-//    }
-//
-//    @Override
-//    protected void onStop() {
-//        super.onStop();
-//        if(opponentId!=null){
-//            mqttHandler.unsubscribe(getTopic(userSingleton.getId()));
-//            mqttHandler.disconnect();
-//        }
-//    }
 }

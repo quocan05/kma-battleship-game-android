@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import edu.utep.cs4330.battleship.common.Common;
 import edu.utep.cs4330.battleship.common.Constants;
@@ -70,10 +72,13 @@ public class ConnectionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         gson = new Gson();
         userSingleton = UserSingleton.getInstance();
+        beService = BEService.getInstance();
         mqttHandler = new ViewModelProvider(this).get(MqttHandler.class);
         mqttHandler.subscribe(getTopic(userSingleton.getId()));
         NetworkAdapter.setSocket();
-        beService = BEService.getInstance();
+
+
+        handleActive(userSingleton.getId());
         setContentView(R.layout.activity_connection);
         userSpinner = (Spinner) findViewById(R.id.list);
         List<User> users = new LinkedList<>();
@@ -169,9 +174,14 @@ public class ConnectionActivity extends AppCompatActivity {
                     BEResponse beResponse = gson.fromJson(responseData, BEResponse.class);
                     List<Object> list = (List) beResponse.getData();
                     List<User> userList = convertListUser(list);
-
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        userList = userList.stream()
+                                .filter(user -> user.getId() != null && !user.getId().equals(userSingleton.getId()))
+                                .collect(Collectors.toList());
+                    }
+                    List<User> finalUserList = userList;
                     runOnUiThread(() -> {
-                        userAdapter = new ArrayAdapter<User>(ConnectionActivity.this, R.layout.spinner, userList) {
+                        userAdapter = new ArrayAdapter<User>(ConnectionActivity.this, R.layout.spinner, finalUserList) {
                             @Override
                             public View getView(int position, View convertView, ViewGroup parent) {
                                 View view = convertView != null ? convertView : LayoutInflater.from(getContext()).inflate(R.layout.spinner, parent, false);
@@ -198,6 +208,43 @@ public class ConnectionActivity extends AppCompatActivity {
                         userSpinner.setAdapter(userAdapter); // Set adapter cho Spinner
                     });
                 }
+            }
+        });
+    }
+
+
+    public void handleActive(Integer id) {
+
+        Request request = Common.getRequest(null, Constants.GET_ACTIVE + "/" + id, Constants.POST);
+
+        beService.getClient().newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e("LoginError", "Request failed", e);
+                Toast.makeText(ConnectionActivity.this, "WRONG USERNAME OR PASSWORD", Toast.LENGTH_SHORT).show();
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                System.out.println("hoang");
+            }
+        });
+    }
+
+    public void handleUnactive(Integer id) {
+
+        Request request = Common.getRequest(null, Constants.UNACTIVE + "/" + id, Constants.POST);
+
+        beService.getClient().newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e("LoginError", "Request failed", e);
+                Toast.makeText(ConnectionActivity.this, "WRONG USERNAME OR PASSWORD", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
             }
         });
     }
@@ -287,15 +334,18 @@ public class ConnectionActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        handleUnactive(userSingleton.getId());
+    }
 
-//    @Override
-//    protected void onStop() {
-//        super.onStop();
-//        if( mqttHandler.isConnected()){
-//            mqttHandler.unsubscribe(getTopic(userSingleton.getId()));
-//            mqttHandler.disconnect();
-//        }
-//    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        handleActive(userSingleton.getId());
+    }
 
     private String getTopic(Integer opponentId) {
         return "battleship/" + opponentId;

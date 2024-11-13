@@ -75,11 +75,21 @@ public class Common {
         }
 
         if (Objects.equals(HttpMethod, "POST")) {
-            RequestBody body = RequestBody.create(MediaType.get("application/json; charset=utf-8"), json);
-            return new Request.Builder()
-                    .url(Constants.HTTP_ADDRESS + api)
-                    .post(body)
-                    .build();
+            if(object!=null) {
+                RequestBody body =   RequestBody.create(MediaType.get("application/json; charset=utf-8"), json) ;
+                return new Request.Builder()
+                        .url(Constants.HTTP_ADDRESS + api)
+                        .post(body)
+                        .build();
+            }
+            else {
+                RequestBody body =   RequestBody.create(MediaType.get("application/json; charset=utf-8"), "{}") ;
+                return new Request.Builder()
+                        .url(Constants.HTTP_ADDRESS + api)
+                        .post(body)
+                        .build();
+            }
+
         } else {
             return new Request.Builder()
                     .url(Constants.HTTP_ADDRESS + api)
@@ -89,5 +99,8 @@ public class Common {
 
     }
 
+    public static String getTopic(Integer id) {
+        return "battleship/" + id;
+    }
 
 }
